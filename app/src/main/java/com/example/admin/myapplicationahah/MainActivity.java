@@ -2,7 +2,10 @@ package com.example.admin.myapplicationahah;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
@@ -55,6 +58,10 @@ public class MainActivity extends AppCompatActivity {
                 if (down == 0){
                     downloadAPK(URL_ADDRESS);
                     mButton.setText("正在下载！！");
+                }else if (down == 1 ){
+                    installAPK();
+                }else if (down == 2){
+                    openAPK(MainActivity.this,URL_ADDRESS);
                 }
             }
         });
@@ -73,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
                     if (connection.getResponseCode() == HttpURLConnection.HTTP_OK){
                         inputStream = connection.getInputStream();
                         if (inputStream != null){
-                            file = getFileStreamPath(httpurl);
+                            file = getFile(httpurl);
                             fileOutputStream = new FileOutputStream(file);
                             byte[] buffer = new byte[1024];
                             int length = 0;
@@ -106,11 +113,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openAPK(Context context,String url){
-
+        PackageManager manager =  context.getPackageManager();
+        PackageInfo info = manager.getPackageArchiveInfo(Environment.getExternalStorageDirectory().getAbsolutePath() + getFilePath(url),PackageManager.GET_ACTIVITIES);
+        if (info != null){
+            Intent intent = manager.getLaunchIntentForPackage(info.applicationInfo.packageName);
+            startActivity(intent);
+        }
     }
 
     private File getFile(String url){
-        File files = new File();
+        File files = new File(Environment.getExternalStorageDirectory(),getFilePath(url));
+        return  files;
     }
 
     private String getFilePath(String url){
