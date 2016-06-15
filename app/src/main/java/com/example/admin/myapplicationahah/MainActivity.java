@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     File file;
     private static int down = 0;
     private static final String URL_ADDRESS = "http://s3test.iobit.com.s3.amazonaws.com/lookout.apk";
+    final public static int REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 159;
 
     private Handler handler = new Handler(){
         @Override
@@ -64,6 +66,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mProgressBar = (ProgressBar)findViewById(R.id.progressbar);
         mButton = (Button)findViewById(R.id.button);
+        if (Build.VERSION.SDK_INT >= 23){
+//            int checkStoragePermission
+        }
         mButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
