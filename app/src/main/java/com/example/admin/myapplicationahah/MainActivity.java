@@ -1,5 +1,6 @@
 package com.example.admin.myapplicationahah;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,11 +12,16 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,11 +33,14 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
     ProgressBar mProgressBar;
+    TextView mTextView;
     Button mButton;
     File file;
     private static int down = 0;
     private static final String URL_ADDRESS = "http://s3test.iobit.com.s3.amazonaws.com/lookout.apk";
     final public static int REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 159;
+    private int FileLength;
+    private int DownedFileLength;
 
     private Handler handler = new Handler(){
         @Override
@@ -45,6 +54,12 @@ public class MainActivity extends AppCompatActivity {
                 case 2:
                     mButton.setText("打开");
                     down = 2;
+                    break;
+                case 3:
+                    mProgressBar.setMax(FileLength);
+                    mProgressBar.setProgress(DownedFileLength);
+                    int progress = DownedFileLength * 100 / FileLength;
+                    mTextView.setText(progress + "%");
                     break;
             }
         }
@@ -65,15 +80,23 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mProgressBar = (ProgressBar)findViewById(R.id.progressbar);
+        mTextView = (TextView)findViewById(R.id.progressb_text);
         mButton = (Button)findViewById(R.id.button);
-        if (Build.VERSION.SDK_INT >= 23){
-//            int checkStoragePermission
-        }
+        DownedFileLength = 0;
         mButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (down == 0){
-                    downloadAPK(URL_ADDRESS);
+                if (down == 0) {
+                    if (Build.VERSION.SDK_INT >= 23) {
+                        int checkStoragePermission = ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                        if (checkStoragePermission != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_WRITE_EXTERNAL_STORAGE);
+                        }else {
+                            downloadAPK(URL_ADDRESS);
+                        }
+                    }else {
+                        downloadAPK(URL_ADDRESS);
+                    }
                     mButton.setText("正在下载！！");
                 }else if (down == 1 ){
                     installAPK();
@@ -107,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
                     URL url = new URL(httpurl);
                     HttpURLConnection connection =  (HttpURLConnection)url.openConnection();
                     connection.setConnectTimeout(5000);
+                    FileLength = connection.getContentLength();
                     FileOutputStream fileOutputStream = null;
                     InputStream inputStream;
                     if (connection.getResponseCode() == HttpURLConnection.HTTP_OK){
@@ -117,9 +141,13 @@ public class MainActivity extends AppCompatActivity {
                             byte[] buffer = new byte[1024];
                             int length = 0;
                             while ((length = inputStream.read(buffer))!= -1){
+                                DownedFileLength += length;
+                                Message message_progressbar = handler.obtainMessage();
+                                message_progressbar.what = 3;
+                                handler.sendMessage(message_progressbar);
                                 fileOutputStream.write(buffer,0,length);
                             }
-                            fileOutputStream.close();;
+                            fileOutputStream.close();
                             fileOutputStream.flush();
                         }
                         inputStream.close();
@@ -160,5 +188,20 @@ public class MainActivity extends AppCompatActivity {
 
     private String getFilePath(String url){
         return url.substring(url.lastIndexOf("/"),url.length());
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case REQUEST_CODE_WRITE_EXTERNAL_STORAGE:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    downloadAPK(URL_ADDRESS);
+                }else {
+                    Toast.makeText(MainActivity.this,"WRITE_EXTERNAL_STORAGE",Toast.LENGTH_SHORT);
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
     }
 }
