@@ -23,6 +23,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.orhanobut.logger.Logger;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -77,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Logger.v("onCreate.....");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mProgressBar = (ProgressBar)findViewById(R.id.progressbar);
@@ -109,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
+        Logger.d("onStart.....");
         super.onStart();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
@@ -118,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        Logger.e("onDestroy.....");
         super.onDestroy();
         unregisterReceiver(receiver);
     }
@@ -127,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
+                    Logger.i("new Thread downloadAPK.....");
                     URL url = new URL(httpurl);
                     HttpURLConnection connection =  (HttpURLConnection)url.openConnection();
                     connection.setConnectTimeout(5000);
@@ -192,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        Logger.d("onRequestPermissionsResult.....");
         switch (requestCode){
             case REQUEST_CODE_WRITE_EXTERNAL_STORAGE:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
