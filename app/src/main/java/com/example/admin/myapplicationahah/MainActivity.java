@@ -123,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         Logger.e("onDestroy.....");
+        Logger.i("test");
         super.onDestroy();
         unregisterReceiver(receiver);
     }
